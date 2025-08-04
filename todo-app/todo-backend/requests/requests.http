@@ -1,0 +1,27 @@
+### GET request to example server
+GET localhost:3000/todos
+
+### Get single
+GET localhost:3000/todos/6890a0e8838542a6f689b03e
+Content-Type: application/json
+
+### Delete request
+DELETE localhost:3000/todos/68908041b0f6aec6db1fe63a
+
+### Post request
+POST localhost:3000/todos
+Content-Type: application/json
+
+{
+  "text": "abc",
+  "done": true
+}
+
+### Put request
+PUT localhost:3000/todos/6890a62ff1366fd9ab3b38e7
+Content-Type: application/json
+
+{
+  "text": "abcdef",
+  "done": false
+}
