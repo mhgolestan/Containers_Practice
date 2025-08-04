@@ -1,6 +1,7 @@
 const express = require('express');
 const { Todo } = require('../mongo')
 const router = express.Router();
+const {getAsync, setAsync, TODO_COUNTER_KEY} = require('../redis')
 
 /* GET todos listing. */
 router.get('/', async (_, res) => {
@@ -14,6 +15,13 @@ router.post('/', async (req, res) => {
     text: req.body.text,
     done: false
   })
+  try {
+    const currentCount = Number(await getAsync(TODO_COUNTER_KEY) || 0);
+    await setAsync(TODO_COUNTER_KEY, currentCount + 1);
+
+  }catch (error) {
+    console.error('Error updating todo counter:', error);
+  }
   res.send(todo);
 });
 
