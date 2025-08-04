@@ -25,3 +25,7 @@ Content-Type: application/json
   "text": "abcdef",
   "done": false
 }
+
+### Get statistics
+GET localhost:3000/statistics
+Content-Type: application/json
