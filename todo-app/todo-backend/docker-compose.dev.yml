@@ -1,8 +1,26 @@
 services:
+  server:
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
+    volumes:
+      - ./:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - 3000:3000
+    environment:
+      - PORT=3000
+      - REDIS_URL=redis://redis:6379
+      - MONGO_URL=mongodb://root:example@mongo:27017/the_database?authSource=admin
+    depends_on:
+      - mongo
+      - redis
+    restart: unless-stopped
+
   mongo:
     image: mongo
     ports:
-      - 3456:27017
+      - 27017:27017
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
@@ -10,13 +28,23 @@ services:
     volumes:
       - ./mongo/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js
       - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
   redis:
     image: redis
     ports:
       - 6379:6379
     volumes:
       - redis_data:/data
-
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
 
 volumes:
   mongo_data:
