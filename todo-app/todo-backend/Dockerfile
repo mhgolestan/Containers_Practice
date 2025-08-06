@@ -1,9 +1,17 @@
-FROM node:20
+FROM node:20-alpine
 
-WORKDIR /src/usr/app
+WORKDIR /usr/src/app
 
-COPY --chown=node:node . .
+RUN apk --no-cache add curl
 
-RUN npm ci --omit=dev
+COPY package*.json ./
 
-CMD npm start
+RUN npm ci --only=production
+
+COPY . .
+
+ENV NODE_ENV=production
+
+EXPOSE 3000
+
+CMD ["npm", "start"]
