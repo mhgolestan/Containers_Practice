@@ -1,43 +1,65 @@
 services:
+  server:
+    image: backend-dev
+    build:
+      context: ./todo-backend
+      dockerfile: dev.Dockerfile
+    volumes:
+      - ./todo-backend:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - 3000:3000
+    environment:
+      - PORT=3000
+      - REDIS_URL=redis://redis:6379
+      - MONGO_URL=mongodb://root:example@mongo:27017/the_database?authSource=admin
+    depends_on:
+      - mongo
+      - redis
+    restart: unless-stopped
+
   mongo:
     image: mongo
+    ports:
+      - 27017:27017
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
       MONGO_INITDB_DATABASE: the_database
     volumes:
-      - ./todo-backend/mongo/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js
-      - ./todo-backend/mongo_data:/data/db
+      - ./mongo/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js
+      - mongo_data:/data/db
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
 
   redis:
     image: redis
-    command: ['redis-server', '--appendonly', 'yes']
+    ports:
+      - 6379:6379
     volumes:
-      - ./todo-backend/redis_data:/data
-
-  server:
-    image: hello-backend-dev
-    build:
-      context: ./todo-backend
-      dockerfile: dev.Dockerfile
-    volumes:
-      - ./todo-backend/:/usr/src/app
-    environment:
-      - REDIS_URL=redis://redis:6379
-      - MONGO_URL=mongodb://the_username:the_password@mongo:27017/the_database
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
 
   app:
-    image: hello-front-dev
+    image: frontend-dev
     build:
       context: ./todo-frontend # The context will pick this directory as the "build context"
       dockerfile: dev.Dockerfile # This will simply tell which dockerfile to read
     volumes:
       - ./todo-frontend/:/usr/src/app
     environment:
-      - VITE_BACKEND_URL=/api
+      - VITE_BACKEND_URL=http://localhost:8080/api
     container_name: hello-front-dev # This will name the container hello-front-dev
-  debug-helper:
-    image: busybox
+    ports:
+      - "5173:5173"
+
 
   nginx:
     image: nginx:1.20.1
@@ -48,3 +70,14 @@ services:
     container_name: reverse-proxy
     depends_on:
       - app # wait for the frontend container to be started
+      - server
+
+
+  debug-helper:
+    image: busybox
+
+
+
+volumes:
+  mongo_data:
+  redis_data:
