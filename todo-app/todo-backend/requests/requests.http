@@ -1,5 +1,5 @@
 ### GET request to example server
-GET localhost:3000/todos
+GET localhost:8080/api/todos
 
 ### Get single
 GET localhost:3000/todos/6890a0e8838542a6f689b03e
